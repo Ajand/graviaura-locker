@@ -15,6 +15,18 @@ describe("graviAuraLocker", () => {
 
       // TODO should deploy a contract for locking token - MOCK graviAura
 
+      const GraviAuraMock = await ethers.getContractFactory("GraviAuraMock");
+
+      const graviAuraMock = await GraviAuraMock.deploy();
+
+      const GraviAuraLockerMock = await ethers.getContractFactory(
+        "GraviAuraLockerMock"
+      );
+
+      const graviAuraLocker = await GraviAuraLockerMock.connect(
+        accounts.owner
+      ).deploy(accounts.owner.address, graviAuraMock.address);
+
       const deployParams = {
         owner: accounts.owner.address,
         lockingAsset: ethers.constants.AddressZero,
@@ -23,6 +35,8 @@ describe("graviAuraLocker", () => {
       return {
         accounts,
         deployParams,
+        asset: graviAuraMock,
+        locker: graviAuraLocker,
       };
     };
 

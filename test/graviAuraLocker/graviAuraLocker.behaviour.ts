@@ -3,6 +3,9 @@ import { expect } from "chai";
 import type { BigNumber } from "ethers";
 import { ethers, network } from "hardhat";
 
+import { GraviAuraLockerMock } from "../../typechain-types/contracts/mocks/GraviAuraLockerMock";
+import { GraviAuraMock } from "../../typechain-types/contracts/mocks/GraviAuraMock";
+
 export type GraviAuraLockerAccount = {
   owner: SignerWithAddress;
   locker: SignerWithAddress;
@@ -26,8 +29,8 @@ export type GraviAuraLockerDeployParams = {
 export type GraviAuraLockerTestContext = {
   accounts: GraviAuraLockerAccount;
   deployParams: GraviAuraLockerDeployParams;
-  //    locker
-  //    lockingAsset
+  asset: GraviAuraMock;
+  locker: GraviAuraLockerMock;
 };
 
 export const shouldBehaveLikeGovernance = (

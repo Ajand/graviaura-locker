@@ -34,13 +34,20 @@ interface igraviAuraLocker {
     function withdraw() external;
 
     /*********** VIEWS ***********/
-    function balanceOf(address _user) external;
+    function balanceOf(address _user)
+        external
+        view
+        returns (uint256 userBalance);
 
-    function withdrawableBalanceOf(address _user) external;
+    function withdrawableBalanceOf(address _user)
+        external
+        view
+        returns (uint256 userBalance);
 
     function deposits(address _user)
         external
-        returns (Deposits[] memory deposits);
+        view
+        returns (Deposits[] memory userDeposits);
 
     function totalSupply() external view returns (uint256 supply);
 
@@ -49,5 +56,5 @@ interface igraviAuraLocker {
         view
         returns (uint256 supply);
 
-    function epochCount() external view returns (uint256);
+    function epochCount() external view returns (uint256 epochCount_);
 }

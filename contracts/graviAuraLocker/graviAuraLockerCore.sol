@@ -25,4 +25,43 @@ abstract contract graviAuraLockerCore is
     /// TODO: Use these functions for initializing
     /// __ReentrancyGuard_init
     /// __Ownable_init
+
+    /*********** ADMIN ***********/
+    function recoverERC20(address _tokenAddress, uint256 _tokenAmount) public {}
+
+    /*********** ACTIONS ***********/
+    function lock(address _account, uint256 _amount) public {}
+
+    function checkpointEpoch() public {}
+
+    function withdraw() public {}
+
+    /*********** VIEWS ***********/
+    function balanceOf(address _user)
+        public
+        view
+        returns (uint256 userBalance)
+    {}
+
+    function withdrawableBalanceOf(address _user)
+        public
+        view
+        returns (uint256 userBalance)
+    {}
+
+    function deposits(address _user)
+        public
+        view
+        returns (Deposits[] memory userDeposits)
+    {}
+
+    function totalSupply() external view returns (uint256 supply) {}
+
+    function totalSupplyAtEpoch(uint256 _epoch)
+        public
+        view
+        returns (uint256 supply)
+    {}
+
+    function epochCount() public view returns (uint256 epochCount_) {}
 }
