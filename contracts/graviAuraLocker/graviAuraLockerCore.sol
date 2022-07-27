@@ -24,5 +24,5 @@ abstract contract graviAuraLockerCore is
 {
     /// TODO: Use these functions for initializing
     /// __ReentrancyGuard_init
-    /// __Ownable_initƒ
+    /// __Ownable_init
 }
