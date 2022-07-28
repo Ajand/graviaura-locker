@@ -57,4 +57,7 @@ interface igraviAuraLocker {
         returns (uint256 supply);
 
     function epochCount() external view returns (uint256 epochCount_);
+
+    /*********** EVENTS ***********/
+    event Recovered(address _token, uint256 _amount);
 }

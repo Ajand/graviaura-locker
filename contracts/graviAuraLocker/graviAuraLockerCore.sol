@@ -2,8 +2,8 @@
 pragma solidity ^0.8.9;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {igraviAuraLocker} from "./igraviAuraLocker.sol";
 
 /**
@@ -19,15 +19,32 @@ import {igraviAuraLocker} from "./igraviAuraLocker.sol";
 
 abstract contract graviAuraLockerCore is
     ReentrancyGuardUpgradeable,
-    OwnableUpgradeable,
     igraviAuraLocker
 {
+    /*********** LIBRARY ***********/
+    using SafeERC20 for IERC20;
+
+    /*********** STATES ***********/
+    address lockingAsset;
+
     /// TODO: Use these functions for initializing
     /// __ReentrancyGuard_init
     /// __Ownable_init
 
+    /*********** DEPENDENCIES ***********/
+    function owner() public view virtual returns (address) {
+        return address(0);
+    }
+
     /*********** ADMIN ***********/
-    function recoverERC20(address _tokenAddress, uint256 _tokenAmount) public {}
+    function recoverERC20(address _tokenAddress, uint256 _tokenAmount) public {
+        require(
+            _tokenAddress != address(lockingAsset),
+            "Cannot withdraw staking token"
+        );
+        IERC20(_tokenAddress).safeTransfer(owner(), _tokenAmount);
+        emit Recovered(_tokenAddress, _tokenAmount);
+    }
 
     /*********** ACTIONS ***********/
     function lock(address _account, uint256 _amount) public {}

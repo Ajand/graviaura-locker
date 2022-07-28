@@ -18,12 +18,13 @@ describe("graviAuraLocker", () => {
       const GraviAuraMock = await ethers.getContractFactory("GraviAuraMock");
 
       const graviAuraMock = await GraviAuraMock.deploy();
+      const randomAsset = await GraviAuraMock.deploy();
 
       const GraviAuraLockerMock = await ethers.getContractFactory(
         "GraviAuraLockerMock"
       );
 
-      const graviAuraLocker = await GraviAuraLockerMock.connect(
+      const graviAuraLockerMock = await GraviAuraLockerMock.connect(
         accounts.owner
       ).deploy(accounts.owner.address, graviAuraMock.address);
 
@@ -36,7 +37,8 @@ describe("graviAuraLocker", () => {
         accounts,
         deployParams,
         asset: graviAuraMock,
-        locker: graviAuraLocker,
+        locker: graviAuraLockerMock,
+        randomAsset,
       };
     };
 
