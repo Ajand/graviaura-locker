@@ -65,16 +65,112 @@ export const shouldBehaveLikeGovernance = (
 
     it("should not be able to recover the locking asset", async () => {
       const { accounts, asset, locker } = context;
-      const { lockerer, owner } = accounts;
+      const { erc20sender, owner } = accounts;
 
       const transferAmount = 10000;
 
-      await asset.mint(lockerer.address, transferAmount);
-      await asset.connect(lockerer).transfer(locker.address, transferAmount);
+      await asset.mint(erc20sender.address, transferAmount);
+      await asset.connect(erc20sender).transfer(locker.address, transferAmount);
 
       await expect(
         locker.connect(owner).recoverERC20(asset.address, transferAmount)
       ).to.be.revertedWith("Cannot withdraw staking token");
+    });
+  });
+
+  describe("Locking asset", () => {
+    it("must be able to lock asset and transfer the amount", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer, owner } = accounts;
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+
+      const tx = await locker
+        .connect(lockerer)
+        .lock(lockerer.address, lockAmount);
+
+      await expect(tx)
+        .to.emit(asset, "Transfer")
+        .withArgs(lockerer.address, locker.address, lockAmount);
+    });
+
+    it("lock must change the locked supply", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      expect(await locker.lockedSupply()).to.be.equal(lockAmount);
+    });
+
+    it("lock must add proper deposit object", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      const lockerDeposits = await locker.deposits(lockerer.address);
+
+      const nearUnlockTime =
+        Math.floor(Number(new Date()) / 1000) + 86400 * 7 * 16;
+
+      expect(lockerDeposits.length).to.be.equal(1);
+      expect(lockerDeposits[0].amount).to.be.equal(lockAmount);
+      expect(lockerDeposits[0].withdrawAmount).to.be.equal(0);
+      expect(lockerDeposits[0].unlockTime - nearUnlockTime).to.be.lessThan(
+        86400 * 7
+      );
+    });
+
+    it("lock must handle epoch checkpoint and supply", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      expect(await locker.epochCount()).to.be.equal(2);
+
+      const currentEpoch = await locker.epochs(1);
+
+      const nearDate = Math.floor(Number(new Date()) / 1000);
+
+      expect(currentEpoch.supply).to.be.equal(lockAmount);
+      expect(currentEpoch.date - nearDate).to.be.lessThan(86400 * 7);
+    });
+
+    it("must emit a Lock event", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer, owner } = accounts;
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+
+      const tx = await locker
+        .connect(lockerer)
+        .lock(lockerer.address, lockAmount);
+
+      await expect(tx)
+        .to.emit(locker, "Locked")
+        .withArgs(lockerer.address, lockAmount, 1);
     });
   });
 };

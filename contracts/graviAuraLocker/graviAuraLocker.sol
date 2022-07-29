@@ -8,6 +8,7 @@ contract graviAuraLocker is graviAuraLockerCore, Ownable {
     constructor(address _owner, address _lockingAsset) {
         lockingAsset = _lockingAsset;
         transferOwnership(_owner);
+        init();
     }
 
     function owner()

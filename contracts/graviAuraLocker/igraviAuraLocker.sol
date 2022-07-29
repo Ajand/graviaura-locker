@@ -13,13 +13,14 @@ pragma solidity ^0.8.9;
  */
 interface igraviAuraLocker {
     /*********** STRUCTS ***********/
-    struct Deposits {
+    struct Deposit {
         uint256 amount;
         uint256 withdrawAmount;
         uint32 unlockTime;
     }
+
     struct Epoch {
-        uint224 supply;
+        uint256 supply;
         uint32 date;
     }
 
@@ -47,7 +48,7 @@ interface igraviAuraLocker {
     function deposits(address _user)
         external
         view
-        returns (Deposits[] memory userDeposits);
+        returns (Deposit[] memory userDeposits_);
 
     function totalSupply() external view returns (uint256 supply);
 
@@ -60,4 +61,5 @@ interface igraviAuraLocker {
 
     /*********** EVENTS ***********/
     event Recovered(address _token, uint256 _amount);
+    event Locked(address indexed _user, uint256 _amount, uint256 epoch);
 }
