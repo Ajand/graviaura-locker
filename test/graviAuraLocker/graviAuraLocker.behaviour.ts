@@ -173,4 +173,98 @@ export const shouldBehaveLikeGovernance = (
         .withArgs(lockerer.address, lockAmount, 1);
     });
   });
+
+  describe("Supply views function", () => {
+    beforeEach(async () => {
+      context = await buildContext();
+    });
+
+    it("Must be able to get proper supply at each Epoch", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      const lockAmount2 = 40000;
+
+      await asset.mint(lockerer.address, lockAmount2);
+      await asset.connect(lockerer).approve(locker.address, lockAmount2);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount2);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      const lockAmount3 = 50000;
+
+      await asset.mint(lockerer.address, lockAmount3);
+      await asset.connect(lockerer).approve(locker.address, lockAmount3);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount3);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.epochCount()).to.be.equal(4);
+      expect(await locker.totalSupplyAtEpoch(0)).to.be.equal(0);
+      expect(await locker.totalSupplyAtEpoch(1)).to.be.equal(lockAmount);
+      expect(await locker.totalSupplyAtEpoch(2)).to.be.equal(
+        lockAmount + lockAmount2
+      );
+      expect(await locker.totalSupplyAtEpoch(3)).to.be.equal(
+        lockAmount + lockAmount2 + lockAmount3
+      );
+    });
+
+    it("Must be able to get proper total supply at each moment", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      expect(await locker.totalSupply()).to.be.equal(0);
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.totalSupply()).to.be.equal(lockAmount);
+
+      const lockAmount2 = 40000;
+
+      await asset.mint(lockerer.address, lockAmount2);
+      await asset.connect(lockerer).approve(locker.address, lockAmount2);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount2);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.totalSupply()).to.be.equal(lockAmount2 + lockAmount);
+
+      const lockAmount3 = 50000;
+
+      await asset.mint(lockerer.address, lockAmount3);
+      await asset.connect(lockerer).approve(locker.address, lockAmount3);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount3);
+
+      expect(await locker.totalSupply()).to.be.equal(
+        lockAmount2 + lockAmount + lockAmount3
+      );
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.totalSupply()).to.be.equal(
+        lockAmount2 + lockAmount + lockAmount3
+      );
+    });
+  });
 };

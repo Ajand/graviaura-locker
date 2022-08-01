@@ -145,13 +145,36 @@ abstract contract graviAuraLockerCore is
         userDeposits_ = userDeposits[_user];
     }
 
-    function totalSupply() external view returns (uint256 supply) {}
+    function totalSupply() external view returns (uint256 supply) {
+        return lockedSupply;
+    }
 
     function totalSupplyAtEpoch(uint256 _epoch)
         public
         view
         returns (uint256 supply)
-    {}
+    {
+        uint256 epochStart = uint256(epochs[0].date).add(
+            uint256(_epoch).mul(EPOCH_DURATION)
+        );
+        uint256 cutoffEpoch = epochStart.sub(LOCK_DURATION);
+
+        require(epochStart < block.timestamp, "Epoch is in the future");
+
+        //traverse inversely to make more current queries more gas efficient
+        for (uint i = _epoch + 1; i > 0; i--) {
+            Epoch memory e = epochs[i - 1];
+            if (uint256(e.date) <= cutoffEpoch) {
+                break;
+            }
+            supply = supply.add(e.supply);
+        }
+    }
+
+    // Get an epoch index based on timestamp
+    function findEpochId(uint256 _time) public view returns (uint256 epoch) {
+        return _time.sub(epochs[0].date).div(EPOCH_DURATION);
+    }
 
     function epochCount() public view returns (uint256 epochCount_) {
         return epochs.length;
