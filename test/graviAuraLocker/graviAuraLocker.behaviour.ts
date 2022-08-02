@@ -316,5 +316,72 @@ export const shouldBehaveLikeGovernance = (
         lockAmount2 + lockAmount + lockAmount3
       );
     });
+
+    it("must show the proper withdrawable balance", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      expect(await locker.totalSupply()).to.be.equal(0);
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
+        0
+      );
+
+      const lockAmount2 = 40000;
+
+      await asset.mint(lockerer.address, lockAmount2);
+      await asset.connect(lockerer).approve(locker.address, lockAmount2);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount2);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
+        0
+      );
+
+      const lockAmount3 = 50000;
+
+      await asset.mint(lockerer.address, lockAmount3);
+      await asset.connect(lockerer).approve(locker.address, lockAmount3);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount3);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
+        0
+      );
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 13]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
+        lockAmount
+      );
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
+        lockAmount + lockAmount2
+      );
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
+        lockAmount + lockAmount2 + lockAmount3
+      );
+    });
   });
 };

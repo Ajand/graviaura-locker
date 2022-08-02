@@ -146,7 +146,17 @@ abstract contract graviAuraLockerCore is
         view
         virtual
         returns (uint256 userBalance)
-    {}
+    {
+        Deposit[] memory targetDeposits = userDeposits[_user];
+        for (uint256 i = 0; i < targetDeposits.length; i++) {
+            if (uint256(targetDeposits[i].unlockTime) <= block.timestamp)
+                userBalance =
+                    userBalance +
+                    targetDeposits[i].amount -
+                    targetDeposits[i].withdrawAmount;
+        }
+        return userBalance;
+    }
 
     function deposits(address _user)
         public
