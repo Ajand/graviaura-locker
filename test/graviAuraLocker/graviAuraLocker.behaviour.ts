@@ -267,4 +267,54 @@ export const shouldBehaveLikeGovernance = (
       );
     });
   });
+
+  describe("Balance related function", () => {
+    it("must show the proper balance for a user after lock", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      expect(await locker.totalSupply()).to.be.equal(0);
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.balanceOf(lockerer.address)).to.be.equal(lockAmount);
+
+      const lockAmount2 = 40000;
+
+      await asset.mint(lockerer.address, lockAmount2);
+      await asset.connect(lockerer).approve(locker.address, lockAmount2);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount2);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.balanceOf(lockerer.address)).to.be.equal(
+        lockAmount2 + lockAmount
+      );
+
+      const lockAmount3 = 50000;
+
+      await asset.mint(lockerer.address, lockAmount3);
+      await asset.connect(lockerer).approve(locker.address, lockAmount3);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount3);
+
+      expect(await locker.totalSupply()).to.be.equal(
+        lockAmount2 + lockAmount + lockAmount3
+      );
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      expect(await locker.balanceOf(lockerer.address)).to.be.equal(
+        lockAmount2 + lockAmount + lockAmount3
+      );
+    });
+  });
 };

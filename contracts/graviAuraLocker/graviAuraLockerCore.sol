@@ -122,36 +122,49 @@ abstract contract graviAuraLockerCore is
         }
     }
 
-    function withdraw() public {}
+    function withdraw() public virtual {}
 
     /*********** VIEWS ***********/
     function balanceOf(address _user)
         public
         view
+        virtual
         returns (uint256 userBalance)
-    {}
+    {
+        Deposit[] memory targetDeposits = userDeposits[_user];
+        for (uint256 i = 0; i < targetDeposits.length; i++) {
+            userBalance =
+                userBalance +
+                targetDeposits[i].amount -
+                targetDeposits[i].withdrawAmount;
+        }
+        return userBalance;
+    }
 
     function withdrawableBalanceOf(address _user)
         public
         view
+        virtual
         returns (uint256 userBalance)
     {}
 
     function deposits(address _user)
         public
         view
+        virtual
         returns (Deposit[] memory userDeposits_)
     {
         userDeposits_ = userDeposits[_user];
     }
 
-    function totalSupply() external view returns (uint256 supply) {
+    function totalSupply() external view virtual returns (uint256 supply) {
         return lockedSupply;
     }
 
     function totalSupplyAtEpoch(uint256 _epoch)
         public
         view
+        virtual
         returns (uint256 supply)
     {
         uint256 epochStart = uint256(epochs[0].date).add(
@@ -172,11 +185,16 @@ abstract contract graviAuraLockerCore is
     }
 
     // Get an epoch index based on timestamp
-    function findEpochId(uint256 _time) public view returns (uint256 epoch) {
+    function findEpochId(uint256 _time)
+        public
+        view
+        virtual
+        returns (uint256 epoch)
+    {
         return _time.sub(epochs[0].date).div(EPOCH_DURATION);
     }
 
-    function epochCount() public view returns (uint256 epochCount_) {
+    function epochCount() public view virtual returns (uint256 epochCount_) {
         return epochs.length;
     }
 }
