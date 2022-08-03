@@ -32,7 +32,7 @@ interface igraviAuraLocker {
 
     function checkpointEpoch() external;
 
-    function withdraw() external;
+    function withdraw(uint256 _amount) external;
 
     /*********** VIEWS ***********/
     function balanceOf(address _user)
@@ -62,4 +62,5 @@ interface igraviAuraLocker {
     /*********** EVENTS ***********/
     event Recovered(address _token, uint256 _amount);
     event Locked(address indexed _user, uint256 _amount, uint256 epoch);
+    event Withdrawn(address indexed _user, uint256 _amount, uint256 epoch);
 }

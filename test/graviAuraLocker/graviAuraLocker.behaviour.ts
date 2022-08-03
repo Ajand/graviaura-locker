@@ -34,6 +34,8 @@ export type GraviAuraLockerTestContext = {
   locker: GraviAuraLockerMock;
 };
 
+// TODO: Must add more test coverage for withdraw
+
 export const shouldBehaveLikeGovernance = (
   buildContext: () => Promise<GraviAuraLockerTestContext>
 ) => {
@@ -382,6 +384,58 @@ export const shouldBehaveLikeGovernance = (
       expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
         lockAmount + lockAmount2 + lockAmount3
       );
+    });
+  });
+
+  describe("Withdraw ", () => {
+    it("must not be able to withdraw if not have enought withdrawable balance", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      expect(await locker.totalSupply()).to.be.equal(0);
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      await expect(
+        locker.connect(lockerer).withdraw(lockAmount)
+      ).to.be.revertedWith("not enough balance.");
+    });
+
+    it("must be able to withdraw if have enought withdrawable balance", async () => {
+      const { accounts, asset, locker } = context;
+      const { lockerer } = accounts;
+
+      expect(await locker.totalSupply()).to.be.equal(0);
+
+      const lockAmount = 10000;
+
+      await asset.mint(lockerer.address, lockAmount);
+      await asset.connect(lockerer).approve(locker.address, lockAmount);
+      await locker.connect(lockerer).lock(lockerer.address, lockAmount);
+
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 3600 * 16]);
+      await ethers.provider.send("evm_mine", []);
+
+      const tx = await locker.connect(lockerer).withdraw(lockAmount);
+
+      await expect(tx)
+        .to.emit(locker, "Withdrawn")
+        .withArgs(lockerer.address, lockAmount, 17);
+
+      //expect(await locker.withdrawableBalanceOf(lockerer.address)).to.be.equal(
+      //  0
+      //);
+      //
+      expect(await locker.balanceOf(lockerer.address)).to.be.equal(0);
+
+      //expect(await locker.totalSupply()).to.be.equal(0);
     });
   });
 };

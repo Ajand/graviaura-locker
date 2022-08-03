@@ -20,6 +20,10 @@ import {AuraMath, AuraMath32, AuraMath112, AuraMath224} from "./dependencies/Aur
 
 import "hardhat/console.sol";
 
+// TODO since we this contract have no delegation of votes nor rewards
+// The epoch system makes no sense
+// need to get rid of it.
+
 abstract contract graviAuraLockerCore is
     ReentrancyGuardUpgradeable,
     igraviAuraLocker
@@ -122,7 +126,41 @@ abstract contract graviAuraLockerCore is
         }
     }
 
-    function withdraw() public virtual {}
+    function withdraw(uint256 _amount) public virtual {
+        require(
+            withdrawableBalanceOf(msg.sender) >= _amount,
+            "not enough balance."
+        );
+        _checkpointEpoch();
+        uint256 amountCounter = _amount;
+        Deposit[] storage targetDeposits = userDeposits[msg.sender];
+        for (uint256 i = 0; i < targetDeposits.length; i++) {
+            uint256 depoistBalance = targetDeposits[i].amount -
+                targetDeposits[i].withdrawAmount;
+            if (
+                depoistBalance == 0 ||
+                targetDeposits[i].unlockTime > block.timestamp ||
+                amountCounter == 0
+            ) {
+                break;
+            }
+            if (amountCounter > depoistBalance) {
+                amountCounter = amountCounter - depoistBalance;
+                targetDeposits[i].withdrawAmount = targetDeposits[i].amount;
+            } else {
+                targetDeposits[i].withdrawAmount =
+                    targetDeposits[i].withdrawAmount +
+                    amountCounter;
+                amountCounter = 0;
+            }
+        }
+
+        lockedSupply = lockedSupply.sub(_amount);
+
+        IERC20(lockingAsset).safeTransfer(msg.sender, _amount);
+
+        emit Withdrawn(msg.sender, _amount, epochs.length - 1);
+    }
 
     /*********** VIEWS ***********/
     function balanceOf(address _user)
